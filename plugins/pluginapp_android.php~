@@ -1,0 +1,14 @@
+<?php
+/**
+*   @package    P
+*   @copyright  Fernando Hidalgo
+*   @license    GNU/GPL, http://www.gnu.org/licenses/gpl-3.0.txt
+*   @changelogs changelogs.php
+*   @file       pluginabstract.php
+**/
+
+class PluginApp_Android extends PluginApp {
+	public function isIt($url) {
+		return (substr($url,0,30) == "https://play.google.com/store/");
+	}
+}

@@ -1,0 +1,524 @@
+<?php
+/**
+*   @package    H
+*   @copyright  Fernando Hidalgo
+*   @license    GNU/GPL, http://www.gnu.org/licenses/gpl-3.0.txt
+*   @changelogs changelogs.php
+*   @file       request.php
+**/
+
+class HRequest {
+	function curPageURL($noURI = true) {
+	 $pageURL = 'http';
+	 if ($_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
+	 $pageURL .= "://";
+	 if ($_SERVER["SERVER_PORT"] != "80") {
+	  $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"];
+	 } else {
+	  $pageURL .= $_SERVER["SERVER_NAME"];
+	 }
+	 if (!$noURI) $pageURL .= $_SERVER["REQUEST_URI"];
+	 return $pageURL;
+	}
+	function get($data, $type = "string") {
+		if (isset($_POST[$data])) $get = $_POST[$data];
+		elseif (isset($_GET[$data])) $get = $_GET[$data];
+		else return null;
+
+		if ($type == "int") return (int) $get;
+		elseif ($type == "string") return $get;
+	}
+
+	// Devuelve la URL correspondiente a un bebé
+	function getBabyUrl($baby) {
+		$conf = new HConfig();
+		return "http://".$baby['alias'].$conf->get('name_cookie_url');
+	}
+
+	// Checkea y confirma el registro de un usuario en el sistema
+	function confirm($id, $code) {
+		$code = (int) $code;
+		$id = (int) $id;
+		$result = HApi::Confirm($id,$code);
+		if ($result == 'ok') {
+			$user->id = $id;
+			$db = &HDatabase::getInstance();
+			$rowu = $db->get('user',$user);
+			if ($rowu != null) {
+				HLogin::dologin($rowu[0]['email'], $rowu[0]['password']);
+				HApi::checkInvites($rowu[0]['id'], $rowu[0]['email']);
+			} else {
+				return "error";
+			}
+		}
+		return $result;
+	}
+
+	function execAction($action, $data) {
+		if ($action == 'login') {
+			if ($data['encode'] == 'yes') {
+				$pass = $_POST['password'];
+			} else {
+				$pass = md5($_POST['password']);
+			}
+			$lid = HLogin::dologin($_POST['email'],$pass);
+			if ($lid != null) {
+				$entry = HNotifications::getCountEntry($lid->id);
+				$comment = HNotifications::getCountComment($lid->id);
+				$s = $entry + $comment;
+				if ($_POST['rememberme'] == 'on') {
+					HLogin::savelogin($lid->id, $_POST['email'], $pass);
+				}
+				if ($s > 0) {
+					return HLang::get('TIENE X NOTIFICACIONES NUEVAS', $s);
+				} else {
+					return HLang::get('SE HA LOGUEADO CON EXITO').".";
+				}
+			} else {
+				return HLang::get('LOS DATOS INTRODUCIDOS NO SON CORRECTOS').".";
+			}
+		} else if ($action == 'logout') {
+			HLogin::dologout();
+			return HLang::get('SE HA DESLOGUEADO CON EXITO').".";
+		} else if ($action == 'recupass') {
+			$email = $_POST['email'];
+			if (!HRequest::check_email_address($email)) return HLang::get('EL EMAIL NO ES VALIDO').".";
+			$db = &HDatabase::getInstance();
+			$rowu->email = $email;
+			$rows = $db->get('user', $rowu);
+			if (count($rows) == 0) return HLang::get('EL EMAIL NO ES VALIDO').".";
+			$mail = HMail::create();
+			$mail->AddAddress($email, $rows[0]['user'].' '.$rows[0]['username']);
+
+			$layout = HMail::layout_recupass($rows[0]['password']);
+			$mail->Subject = $layout->subject;
+
+			$mail->MsgHTML($layout->body);
+
+			if(!$mail->Send()) {
+				return HLang::get('HA OCURRIDO UN ERROR').".";
+				  //return $mail->ErrorInfo;
+			} else {
+				return HLang::get('SE LE HA ENVIADO UN CORREO ELECTRONICO PARA RECUPERAR SU CONTRASENA').".";
+			}			
+		} else if ($action == "re") {
+			$token = $_GET['token'];
+			if ($token == "") return HLang::get('ERROR ESTA PETICION NO ES VALIDA').".";
+			$user->password = $token;
+			$db = &HDatabase::getInstance();
+			$rows = $db->get('user', $user);
+			if (count($rows) == 0) return HLang::get('ERROR ESTA PETICION NO ES VALIDA').".";
+			else return HLang::get('SE VA A PROCEDER A SU CAMBIO DE CLAVE').".";
+		} else if ($action == "recugo") {
+			$token = $data['token'];
+			if ($token == "") return HLang::get('ERROR ESTA PETICION NO ES VALIDA').".";
+			$user->password = $token;
+			$db = &HDatabase::getInstance();
+			$rows = $db->get('user', $user);
+			if (count($rows) == 0) return HLang::get('ERROR ESTA PETICION NO ES VALIDA').".";
+			if ($data['password'] != $data['password2']) return HLang::get('ERROR LAS CONTRASENAS INDICADAS NO COINCIDEN').".";
+			$rows[0]['password'] = md5($data['password']);
+			$db->store('user', $rows[0]);
+			return HLang::get('SU CONTRASENA SE HA CAMBIADO CORRECTAMENTE').".";
+		} else if ($action == 'save_style') {
+			$baby_id = (int) $data['baby_id'];
+			if ($baby_id <= 0 || !HLogin::canEdit($baby_id)) return HLang::get('HA OCURRIDO UN ERROR O USTED NO PUEDE EDITAR ESTE BEBE').".";
+			$type = $data['type'];
+			$value = $data['value'];
+			if (HThemes::setConf($baby_id, $type, $value) > 0) {
+				return HLang::get("SE HA CAMBIADO SU CONFIGURACION DE X A Y",$type,$value);
+			} else {
+				return HLang::get('HA OCURRIDO UN ERROR').".";
+			}
+		} else if ($action == 'save_entry') {
+			$baby_id = (int) $data['baby_id'];
+			if ($baby_id <= 0 || !HLogin::canEdit($baby_id)) return HLang::get('HA OCURRIDO UN ERROR O USTED NO PUEDE EDITAR ESTE BEBE').".";
+			$user = HLogin::islogged();
+			$ub_id = HApi::AuthBaby($user->email, $user->password, $baby_id);
+			if ($ub_id < 0) return HLang::get('HA OCURRIDO UN ERROR').".";
+
+			$type_entry = "none"; // Por defecto no es nada
+			if ($data["SAC_1_x1"] != "none") { // Es imagen
+				$type_entry = "image";
+			} else if ($data['SAC_2_x1'] == 'video') { // Es vídeo
+				$type_entry = "video";
+			} else {
+				$type_entry = "empty";
+			}
+
+			$date_entry = HDatetime::jsTOmysql($data['date_entry']);
+			$title = $data['title'];
+			$text = $data['text'];
+			$p_id = HApi::Post($ub_id, $date_entry, $title, $text, null, $tags, $type_entry);
+			if ($p_id < 0) return HLang::get('HA OCURRIDO UN ERROR').".";
+
+			if ($data['mobile'] == 'yes') {
+				$nametemp = HApi::UploadFile($_FILES['image_for_entry'], $type_entry);
+				if ($nametemp != false) {
+					$data["SAC_1_imagename"] = $nametemp;
+				}
+			}
+			if ($type_entry == "image") {
+				HApi::UploadImageM("entry", $p_id, "1", $data, 450, 450);
+			} else if ($type_entry == "video") {
+				HApi::UploadVideoM("entry", $p_id, "2", $data);
+			}
+
+			return HLang::get('SU ENTRADA SE HA SUBIDO CORRECTAMENTE').".";
+		} else if ($action == 'save_edit_entry') {
+			$entry_id = (int) $data['entry_id'];
+			if ($entry_id <= 0) return HLang::get('HA OCURRIDO UN ERROR').".";
+			$baby = HApi::getBabyFromEntry($entry_id);
+			if (!HLogin::canAdmin($baby['id'])) return HLang::get('HA OCURRIDO UN ERROR').".";
+			$entry = HModel::getEntry($entry_id);
+			if ($entry['id'] != $entry_id) return HLang::get('HA OCURRIDO UN ERROR').".";
+			$entry_e->id = $entry['id'];
+			$entry_e->title = $data['title'];
+			$entry_e->text = $data['text'];
+			$date_entry = HDatetime::jsTOmysql($data['date_entry']);
+			$entry_e->date_entry = $date_entry;
+			$db = &HDatabase::getInstance();
+			$db->store("entry", $entry_e);
+
+			return HLang::get('SE HA GUARDADO SU ENTRADA CON EXITO').".";
+
+		} else if ($action == 'delete_entry') {
+			// TODO: Comprobar permisos, ¡¡¡canAdmin!!!
+			$entry_id = (int) $data['entry_id'];
+			if ($entry_id <= 0) return HLang::get('HA OCURRIDO UN ERROR').".";
+			$baby = HApi::getBabyFromEntry($entry_id);
+			if (!HLogin::canAdmin($baby['id'])) return HLang::get('HA OCURRIDO UN ERROR').".";
+			if (HApi::RemoveEntry("entry", $entry_id)) return HLang::get('SE ELIMINO SU ENTRADA CON EXITO').".";
+			else return HLang::get('HA OCURRIDO UN ERROR').".";
+		} else if ($action == 'save_user') {
+			$rowu->name = $data['name'];
+			$rowu->surname = $data['surname'];
+			$rowu->password = md5($data['password']);
+			$rowu->email = $data['email'];
+			$token = false;
+			if ($data['token'] != '') {
+				$db = &HDatabase::getInstance();
+				$u->email = $data['email'];
+				$u->token = $data['token'];
+				$rowui = $db->get('user_invite',$u);
+				if (count($rowui) == 0) return HLang::get('HA OCURRIDO UN ERROR CON SU INVITACION').".";
+				$u_id = HApi::Register($rowu, true);
+				$token = true;
+			} else {
+				$u_id = HApi::Register($rowu);
+			}
+			if ($u_id < 0) {
+				if ($u_id == -10) return HLang::get('ERROR ESTE EMAIL YA ESTA REGISTRADO O NO ES VALIDO').".";
+				else return HLang::get('HA OCURRIDO UN ERROR').".";
+			}
+			$user = HModel::getUser($u_id);
+			HApi::UploadImageM("user", $u_id.'_'.$user['token'], "1", $data, 90, 90);
+			if ($token) {
+				HApi::checkInvites($u_id, $rowu->email);
+				HLogin::dologin($rowu->email, $rowu->password);
+				return HLang::get('SU USUARIO SE HA REGISTRADO CON EXITO').".";
+			} else {
+				return HLang::get('SU USUARIO SE HA REGISTRADO REVISE SU CORREO').".";
+			}
+		} else if ($action == 'invite') {
+			HLogin::dologout();
+		} else if ($action == 'new_baby') {
+			$email = $data['email'];
+			$password = $data['password'];
+			$user = HLogin::islogged();
+			if ($user->email != $email || $user->password != $password) return HLang::get('HA FALLADO SU SESION').".";
+			$res = HApi::Auth($email, $password);
+			if ($res['id'] < 0 || $res['state'] == "pending") return HLang::get('NO TIENE PERMISOS PARA REGISTRAR UN BEBE').".";
+			(int) $baby_id = $data['baby_id'];
+			if ($baby_id != 0) {
+				$ub_id = HApi::AuthBaby($user->email, $user->password, $baby_id);
+				if ($ub_id < 0) return HLang::get('HA OCURRIDO UN ERROR').".";
+				$baby->id = $baby_id;
+				$rowu->id = $ub_id;
+			} else {
+				$token = HDatetime::genRandomString(100, true);
+				$baby->token = $token;
+				$baby->state = "normal";
+				$baby->alias = $data['alias'];
+			}
+			$baby->sex = $data['sex'];
+			if ($baby->sex != 'boy' && $baby->sex != 'girl') $baby->sex = 'boy';
+			$baby->name = $data['name'];
+			$baby->surname = $data['surname'];
+			$baby->user_id = $res['id'];
+			$baby->date_birth = HDatetime::jsTOmysql($data['date_birth']);
+			$baby->privacity = $data['privacity'];
+			if ($baby->privacity != 'public' && $baby->privacity != 'private') $baby->privacity = 'private';
+			$b_id = HApi::saveBaby($baby);
+			if ($b_id < 0) {
+				if ($b_id == -11) return HLang::get('EL ALIAS DE BEBE INTRODUCIDO YA ESTA SIENDO USADO').'.';
+				else if ($b_id == -12) return HLang::get('EL ALIAS DE BEBE CONTIENE CARACTERES NO VALIDOS').".";
+				return HLang::get('HA OCURRIDO UN ERROR').'.';
+			}
+			$rowu->alias = $res['name'];
+			$rowu->user_id = $res['id'];
+			$rowu->baby_id = $b_id;
+			$rowu->rol_id = $data['rol_id'];
+			$rowu->can = "owner";
+			$res2 = HApi::saveUserBaby($rowu);
+			if ($res2 < 0) return HLang::get("HA OCURRIDO UN ERROR").".";
+
+			$babrows = HModel::getBaby($b_id);
+			HApi::UploadImageM("head", $b_id.'_'.$babrows[0]['token'], "1", $data, 350, 70);
+			HApi::UploadImageM("baby", $b_id.'_'.$babrows[0]['token'], "2", $data, 100, 100);
+			if ($baby_id == 0) {
+				return HLang::get('SU BEBE HA SIDO REGISTRADO CON EXITO').'.';
+			} else {
+				return HLang::get('SU BEBE SE HA GUARDADO CON EXITO').'.';
+			}
+		} else if ($action == 'save_myprofile') {
+			$user = HLogin::islogged();
+			if ($user == null) return HLang::get('HA OCURRIDO UN ERROR');
+			$rowu->id = $user->id;
+			$rowu->name = $data['name'];
+			$rowu->surname = $data['surname'];
+			if ($data['password-change'] != '') $rowu->password = md5($data['password-change']);
+			$db = &HDatabase::getInstance();
+			$db->store('user', $rowu);
+			HLogin::dorelogin();
+			$usrow = HModel::getUser($rowu->id);
+			HApi::UploadImageM("user", $rowu->id.'_'.$usrow['token'], "3", $data, 90, 90);
+			return HLang::get('SE HAN GUARDADO SUS CAMBIOS CON EXITO').".";
+		} else if ($action == 'save_comment') {
+			// TODO: Comprobar que el usuario puede grabar el comentario en esa entrada
+			$user = HLogin::islogged();
+			if ($user == null) return HLang::get("HA OCURRIDO UN ERROR").'.';
+			if (strlen($data['text']) == 0) return HLang::get('ERROR SU COMENTARIO ESTA VACIO').'.';
+			$row->user_id = $user->id;
+			$row->entry_id = $data['entry_id'];
+			$row->text = trim($data['text']);
+			$db = &HDatabase::getInstance();
+			$db->store('entry_comment', $row);
+			return HLang::get('SU COMENTARIO SE GUARDO CORRECTAMENTE').'.';
+		} else if ($action == 'allview') {
+			$user = HLogin::islogged();
+			if ($user == null) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			$count = HNotifications::allView($user->id);
+			return HLang::get('HA MARCADO X NOTIFICACIONES COMO VISTAS',$count).'.';
+		} else if ($action == 'save_user_settings') {
+			$user = HLogin::islogged();
+			if ($user == null) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			$notification_email = $data['notification_email'];
+			if ($notification_email == '') return HLang::get('HA OCURRIDO UN ERROR').'.';
+			$news_email = $data['news_email'];
+			if ($data['news_email'] == '') return HLang::get('HA OCURRIDO UN ERROR').'.';
+			HUserSetting::setConf($user->id, 'notification_email', $notification_email);
+			HUserSetting::setConf($user->id, 'news_email', $news_email);
+			return HLang::get('SE HAN GUARDADO SUS PREFERENCIAS CON EXITO').'.';
+		} else if ($action == 'save_wizzard') {
+			$baby_id = HRequest::get('baby_id', 'int');
+			if ($baby_id <= 0 || !HLogin::canEdit($baby_id)) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			$user = HLogin::islogged();
+			$ub_id = HApi::AuthBaby($user->email, $user->password, $baby_id);
+			if ($ub_id < 0) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			$theme_id = HRequest::get('theme_id', 'int');
+			$title = HModel::checkThemesWizzard($theme_id, $user->id);
+			if ($title == false) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			HModel::setThemesWizzard($theme_id,$baby_id);
+			return HLang::get('HA SELECCIONADO EL TEMA X CON EXITO',$title).'.';
+		} else if ($action == "save_astheme") {
+			// TODO: Comprobar seguridad y demás.
+			$user = HLogin::islogged();
+			$baby_id = (int) $data['baby_id'];
+			if ($user == null) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			if ($data['mode'] == 'new') {
+				$thenew->user_id = $user->id;
+				$thenew->title = $data['title'];
+				$thenew->description = $data['description'];
+				// ADMINS
+				if ($user->id == 1 || $user->id == 2) $thenew->public = 1;
+				$theme_id = HModel::saveNewThemeWizzard($thenew);
+			} else if ($data['mode'] == 'edit') {
+				$theme_id = $data['already_theme'];
+			}
+			$title = HModel::checkThemesWizzard($theme_id, $user->id, true);
+			if ($title == false) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			HModel::saveValuesThemeWizzard($baby_id, $theme_id);
+			return HLang::get('SU CONFIGURACION DE HA GUARDADO EN EL TEMA X',$title).'.';
+		} else if ($action == "beta") {
+			$email = $data['email'];
+			if (!HRequest::check_email_address($email)) return HLang::get('EL EMAIL NO ES VALIDO').'.';
+			$problem = $data['problem'];
+			if ($problem == '') return HLang::get('NO HA INDICADO UN MENSAJE').'.';
+			$mail = HMail::create();
+			$address = "info@suspasitos.com";
+			$mail->AddAddress($address, HLang::get('USUARIO DE SUSPASITOS'));
+			$mail->Subject    = "Mensaje de contacto de ".$email;
+			
+			$body = "<h4>Ha recibido un mensaje de: ".$email."</h4>";
+			$body .= "<p>".$problem."</p>";
+
+			$mail->MsgHTML($body);
+			if(!$mail->Send()) {
+				  //return $mail->ErrorInfo;
+				return "Ha ocurrido un error enviando el correo electrónico.";
+			} else {
+				return "Su mensaje se ha enviado correctamente. Le responderemos a la mayor brevedad posible, gracias.";
+			}
+		} else if ($action == "delete_baby") {
+			$baby_id = $data['baby_id'];
+			$babys = HModel::getBaby($baby_id);
+			$baby = $babys[0];
+			if ($data['confirm_field'] != 'eliminar') return HLang::get('SU MENSAJE DE CONFIRMACION NO ES VALIDO').'.';
+			if (HLogin::canOwner($baby['id'])) {
+				if (HModel::deleteBaby($baby['id'])) {
+					return HLang::get('HA ELIMINADO LA PAGINA DE SU BEBE X Y TODOS LOS DATOS RELACIONADOS CON EL',$baby['name']." ".$baby['surname']).'.';
+				} else {
+					return HLang::get('HA OCURRIDO UN ERROR').'.';
+				}
+			} else {
+				return HLang::get('HA OCURRIDO UN ERROR').'.';
+			}
+		} else if ($action == "delete_user") {
+			$user = HLogin::islogged();
+			if ($user == null) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			if ($data['confirm_field'] != "eliminar") return HLang::get('SU MENSAJE DE CONFIRMACION NO ES VALIDO').'.';
+			$uid = (int) $user->id;
+			if ($uid == 0) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			HModel::deleteUser($uid);
+			HLogin::dologout();
+			return HLang::get('SU CUENTA Y TODAS LAS PAGINAS DE BEBES ASOCIADAS FUERON ELIMINADAS CON EXITO').'.';
+		} else if ($action == "admin") {
+			if (!HLogin::isAdmin()) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			if ($data['subaction'] == 'sendmail') {
+				$nums = HModel::sendEmail($data['email_title'], $data['email_body'], $data['onlyme'], $data['onlyp']);
+				if ($nums > 0) {
+					return "Su correo se ha enviado correctamente a ".$nums." destinatarios.";
+				} else {
+					return "El correo no se ha podido enviar o no se ha enviado a ningún destinatario.";
+				}
+			} else if ($_GET['subaction'] == 'remember_all') {
+				$users = HAdmin::getUsersStat(true);
+				$c = 0;
+				foreach($users as $u) {
+					$user->id = $u['id'];
+					$user->code = $u['code'];
+					$user->name = $u['name'];
+					$user->surname = $u['surname'];
+					$user->email = $u['email'];
+					if (HModel::resend_confirm($user)) {
+						$c++;
+					}
+				}
+				return "Enviado correo de confirmación de cuenta a ".$c." usuarios.";
+			}
+		} else if ($action == "rotate") {
+			if ($_GET['baby'] == '') return;
+			$baby = HModel::getBabyFromAlias($_GET['baby']);
+			if ($baby == null) return HLang::get('PAGINA DE BEBE NO ENCONTRADA').'.';
+			if (!HLogin::canAdmin($baby['id'])) return HLang::get('HA OCURRIDO UN ERROR').'.';
+			if (HImage::Rotate($_GET['uri'], $_GET['dir'])) HLang::get('IMAGEN ROTADA CON EXITO');
+			else return HLang::get('HA OCURRIDO UN ERROR').'.';
+		} else if ($action == "resend_confirm") {
+			$user = HLogin::islogged();
+			if ($user == null || $user->state != 'pending') return HLang::get('HA OCURRIDO UN ERROR').'.';
+			if (HModel::resend_confirm($user)) {
+				return HLang::get('SE LE HA REENVIADO UN CORREO PARA CONFIRMAR SU CUENTA').'.';
+			} else {
+				return HLang::get('HA OCURRIDO UN ERROR').'.';
+			}
+		} else {
+			return null;
+		}
+	}
+
+	function check_email_address($email) {
+		// First, we check that there's one @ symbol, 
+		// and that the lengths are right.
+		if (!ereg("^[^@]{1,64}@[^@]{1,255}$", $email)) {
+			// Email invalid because wrong number of characters 
+			// in one section or wrong number of @ symbols.
+			return false;
+		}
+		// Split it into sections to make life easier
+		$email_array = explode("@", $email);
+		$local_array = explode(".", $email_array[0]);
+		for ($i = 0; $i < sizeof($local_array); $i++) {
+			if
+				(!ereg("^(([A-Za-z0-9!#$%&'*+/=?^_`{|}~-][A-Za-z0-9!#$%&
+				↪'*+/=?^_`{|}~\.-]{0,63})|(\"[^(\\|\")]{0,62}\"))$",
+				$local_array[$i])) {
+				return false;
+			}
+		}
+		// Check if domain is IP. If not, 
+		// it should be valid domain name
+		if (!ereg("^\[?[0-9\.]+\]?$", $email_array[1])) {
+			$domain_array = explode(".", $email_array[1]);
+			if (sizeof($domain_array) < 2) {
+			return false; // Not enough parts to domain
+		}
+		for ($i = 0; $i < sizeof($domain_array); $i++) {
+			if
+				(!ereg("^(([A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9])|
+				↪([A-Za-z0-9]+))$",
+				$domain_array[$i])) {
+				return false;
+			}
+		}
+		}
+		return true;
+	}
+
+	function isMobile() {
+/*		$user = HLogin::isLogged();
+		if ($user->id == 1) return true;*/
+		if ($_GET['layout'] == 'wizzard') return false;
+		if ($_GET['changeforce'] == 'web') {
+			setcookie("suspasitos_changeforce", "web" , time()+(60*60*24*365));
+			return false;
+		} else if ($_GET['changeforce'] == 'mob') {
+			setcookie("suspasitos_changeforce", "mob" , time()+(60*60*24*365));
+			return true;
+		}
+		if ($_COOKIE["suspasitos_changeforce"] == "web") return false;
+		if ($_COOKIE["suspasitos_changeforce"] == "mob") return true;
+		$useragent=$_SERVER['HTTP_USER_AGENT'];
+		if(preg_match('/android.+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i',$useragent)||preg_match('/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|e\-|e\/|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(di|rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|xda(\-|2|g)|yas\-|your|zeto|zte\-/i',substr($useragent,0,4))) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function cleanHTML($string) {
+		$string = str_replace("&aacute;","i",$string);
+		$string = str_replace("&eacute;","i",$string);
+		$string = str_replace("&iacute;","i",$string);
+		$string = str_replace("&oacute;","i",$string);
+		$string = str_replace("&uacute;","i",$string);
+		return $string;
+	}
+
+	function addExtraLog($text) {
+		$conf = new HConfig();
+		if ($conf->get('url') == 'http://dev-suspasitos.es/') {
+			$myFile = "logdebug_extra.log";
+			$fh = fopen($myFile, 'a+') or die("can't open file");
+			fwrite($fh, "\n".$text);
+			fclose($fh);
+		}
+	}
+
+	function setAfterUrl($url = '') {
+		HRequest::setCookieGood("suspasitos_urlredirect",$url);
+	}
+
+	function setCookieGood($name, $value = '') {
+		$conf = new HConfig();
+		//$domain = substr($conf->get('name_cookie_url'),1,strlen($conf->get('name_cookie_url')));
+		$domain = $conf->get('name_cookie_url');
+		if ($value == '') {
+			setcookie($name, "", time()-3600,$domain);
+			$_COOKIE[$name] = '';
+		} else {
+			setcookie($name, $value , time()+(60*60*24*365),$domain);
+		}
+	}
+}
+?>

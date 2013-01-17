@@ -1,0 +1,32 @@
+<?php
+/**
+*   @package    P
+*   @copyright  Fernando Hidalgo
+*   @license    GNU/GPL, http://www.gnu.org/licenses/gpl-3.0.txt
+**/
+
+class PluginWeb_Joomla extends PluginWeb {
+	// TODO: Implementar caché en metadata, body, etc... sólo coger una vez
+
+	public function isIt($url) {
+		$meta = PModel::getMetadata($url);
+		// https://www.gavick.com/magazine/how-to-check-the-version-of-joomla.html
+		return (substr(PModel::getSafeKey($meta,'generator'),0,7) == "Joomla!");
+	}
+
+	public function getImages($url) {
+
+	}
+
+	public function getTitle() {
+		return $this->getMetaKey('description');
+	}
+
+	function mySkills() {
+		$skills[] = "Joomla";
+		echo $this->getMetaKey("viewport");
+		exit();
+		if ($this->isInContent("bootstrap")) $skills[] = "Bootstrap";
+		return $skills;
+	}
+}

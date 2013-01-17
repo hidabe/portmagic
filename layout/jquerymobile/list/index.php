@@ -1,0 +1,29 @@
+<?php require_once("layout/jquerymobile/common/head.php"); ?>
+
+<div data-role="page" class="type-interior">
+
+	<div data-role="header">
+		<h1>My Title</h1>
+	</div><!-- /header -->
+
+	<div data-role="content">	
+		<ul data-role="listview"  data-theme="c" data-inset="true" data-dividertheme="d">
+			<li data-role="list-divider">PortFolio</li>
+			<?php foreach($webs as $web) { ?>
+				<li><a target="_blank" href="<?php echo $web->getUrl();?>">
+					<img src="<?php echo $web->getImageThumb();?>" />
+					<h3><?php echo $web->getTitle();?></h3>
+					<p>
+						<?php foreach($web->getSkills() as $skill) { ?>
+							<img width="40px" src="<?php echo PModel::getImageFromSkill($skill);?>"></img>
+						<?php } ?>
+					</p>
+					<p class="ui-li-aside"><?php echo $web->getDate();?></p>
+				</a></li>
+			<?php } ?>
+		</ul>
+	</div><!-- /content -->
+
+</div><!-- /page -->
+
+<?php require_once("layout/jquerymobile/common/foot.php"); ?>
