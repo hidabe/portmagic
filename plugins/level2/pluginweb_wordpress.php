@@ -5,17 +5,14 @@
 *   @license    GNU/GPL, http://www.gnu.org/licenses/gpl-3.0.txt
 **/
 
-class PluginWeb_Joomla extends PluginWeb {
+class PluginWeb_Wordpress extends PluginWeb {
 	// TODO: Implementar caché en metadata, body, etc... sólo coger una vez
 
 	public function isIt($url) {
 		$meta = PModel::getMetadata($url);
-		// https://www.gavick.com/magazine/how-to-check-the-version-of-joomla.html
-		return (substr(PModel::getSafeKey($meta,'generator'),0,7) == "Joomla!");
-	}
-
-	public function getImages($url) {
-
+		if (strpos(PModel::getSafeKey($meta,'generator'),'WordPress') !== false) {
+			return true;
+		}
 	}
 
 	public function getTitle() {
@@ -23,7 +20,7 @@ class PluginWeb_Joomla extends PluginWeb {
 	}
 
 	function mySkills() {
-		$skills[] = "Joomla";
+		$skills[] = "Wordpress";
 		if ($this->getMetaKey("viewport") == "width=device-width, initial-scale=1.0") $skills[] = "Mobile";
 		if ($this->isInContent("bootstrap")) $skills[] = "Bootstrap";
 		return $skills;

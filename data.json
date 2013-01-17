@@ -1,18 +1,26 @@
 {
-    "0": {
-        "web":"http:\/\/hidabe.com"
-    },
+	"4": {
+		"web":"http://buscasos.com"
+	},
     "1": {
         "web":"https:\/\/play.google.com\/store\/apps\/details?id=com.hidabe.suspasitos"
     },
-    "3": {
-        "web":"http:\/\/stuvoz.com"
+	"0": {
+	    "web":"http://alvaro-carmona.es"
+	},
+	"7": {
+	    "web":"http://dietamente.com/blog"
+	},    
+    "5": {
+        "web":"http:\/\/manolodesantacruz.com"
     },
-    "2": {
-        "web":"http:\/\/eldesiertodemarruecos.com"
+    "9": {
+        "web":"http://suspasitos.com"
     },
-		"4": {
-				"web":"http:\/\/juanmartoscaceres.com/cagadaenlamano/cagadaenlamano/web"
-		}
+    "10": {
+        "web":"http://custombit.me"
+    },
+    "11": {
+        "web":"https://play.google.com/store/apps/details?id=com.pradoapps.museocuenca"
+    }
 }
-

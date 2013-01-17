@@ -55,7 +55,9 @@ class PluginAbstract {
 
 	function getImageMain() {
 		if ($this->image_main == null) {
-			$this->image = PModel::getThumbnail($this->getUrl(),1024,1024,960,400);
+			//$this->image = PModel::getThumbnail($this->getUrl(),1024,1024,960,400);
+			//$this->image = PModel::getImage($this->getUrl(), 980, 400);
+			$this->image = PModel::getTopCropThumbnail($this->getUrl(), 1024, 1024, 960, 500);
 		}
 		return $this->image;
 	}

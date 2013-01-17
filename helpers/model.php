@@ -1,6 +1,6 @@
 <?php
 /**
-*   @package    P
+*   @package    PortMagic
 *   @copyright  Fernando Hidalgo
 *   @license    GNU/GPL, http://www.gnu.org/licenses/gpl-3.0.txt
 *   @changelogs changelogs.php
@@ -100,6 +100,29 @@ class PModel {
 		}
 		return PFrameWork::$config->get('url') . "cache/images/".$dimx."x".$dimy."/". $name . ".png";
 	}
+	
+	function getTopCropThumbnail($url, $ox, $oy, $dimx, $dimy) {
+		$wk = PFrameWork::$config->get('dir') . PFrameWork::$config->get('script_wk');
+		$name = md5($url);
+
+		$dir = PFrameWork::$config->get('dir') . "cache/images/".$dimx."x".$dimy;
+		$diro = PFrameWork::$config->get('dir') . "cache/images/".$ox."x".$oy;
+		if (!file_exists($dir)) mkdir($dir);
+		if (!file_exists($diro)) mkdir($diro);
+		
+		$file = $diro."/".$name.".png";
+		$file_thumb = $dir."/".$name.".png";
+		
+		if (!file_exists($file)) {
+			$file = PModel::getImage($url, $ox, $oy);
+		}
+		
+		if (!file_exists($file_thumb)) {
+			$command = "convert ".$file." -crop ".$dimx."x".$dimy."+0+0^ ".$file_thumb;
+			exec($command, $output);			
+		}
+		return PFrameWork::$config->get('url') . "cache/images/".$dimx."x".$dimy."/". $name . ".png";
+	}
 
 	function getThumbnail($url, $ox, $oy, $dimx, $dimy) {
 		$wk = PFrameWork::$config->get('dir') . PFrameWork::$config->get('script_wk');
@@ -195,7 +218,7 @@ class PModel {
 	}
 
 	function getSafeKey($array, $key) {
-		if (array_key_exists($key, $array)) return $array[$key];
+		if (is_array($array) && array_key_exists($key, $array)) return $array[$key];
 		else return "";
 	}
 
