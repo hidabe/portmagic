@@ -1,6 +1,6 @@
 <?php
 /**
-*   @package    P
+*   @package    PortMagic
 *   @copyright  Fernando Hidalgo
 *   @license    GNU/GPL, http://www.gnu.org/licenses/gpl-3.0.txt
 *   @changelogs changelogs.php
