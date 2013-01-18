@@ -5,9 +5,9 @@
       <!-- Begin page content -->
       <div class="container">
         <div class="page-header">
-          <h1>SoPINeT</h1>
+          <h1><?php echo PFrameWork::$config->get('site');?></h1>
         </div>
-        <p class="lead">Portfolio de algunos trabajos en los que hemos trabajado. <a href="mailto:fhidalgo@sopinet.com">Contáctenos</a></p>
+        <p class="lead"><?php echo PFrameWork::$config->get('description');?></p>
 
 		    <div id="push">
 					<div id="myCarousel" class="carousel slide">
