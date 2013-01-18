@@ -13,18 +13,24 @@ http://sopinet.com,
 
 You need in your server:
 
-PHP Server
-imagemagick 
-wkhtmltoimage working (more info is coming)
+1. PHP Server
+
+2. imagemagick 
+
+3. wkhtmltoimage working (more info is coming)
 
 ## Installation
 
-Download code
-Rename configuration-sample.php to configuration.php and review it
-Rename data-sample.json to data.json and set your webs/app links here
+1. Download code
+
+2. Rename configuration-sample.php to configuration.php and review it
+
+3. Rename data-sample.json to data.json and set your webs/app links here
 
 Ok, it is done! try!
 
 ## Know problems
 
-Cache: You need exec sh clean.sh in directory cache, and chmod 777 cache/* -R
+1. Cache: You need exec sh clean.sh in directory cache, and chmod 777 cache/* -R
+
+2. Slow: Actual system loading your info slowing first time
