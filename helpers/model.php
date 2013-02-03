@@ -10,6 +10,9 @@
 class PModel {
 	static $plugins;
 	static $webs;
+	static $about_key;
+	static $token_key;
+	static $profiles;
 
 	// Init Plugin
 	function initPlugins() {
@@ -33,11 +36,64 @@ class PModel {
 
 	function initWebs($data) {
 		$i = 0;
-		foreach($data as $d) {
-			$plugin = PModel::whatpluginis($d['web']);
-			PModel::$webs[$i] = new $plugin($d['web']);
+		foreach($data['webs'] as $d) {
+			$plugin = PModel::whatpluginis($d);
+			PModel::$webs[$i] = new $plugin($d);
 			$i++;
 		}
+	}
+	
+	function initAbout($data) {
+		PModel::$about_key = $data['about']['client_id'];
+		$i = 0;
+		foreach($data['about']['profiles'] as $pro) {
+			PModel::$profiles[$i] = PModel::processProfile($pro);
+			$i++;
+		}
+	}
+	
+	function post_to_url($url, $data) { 
+		$fields = ''; 
+		foreach($data as $key => $value) { 
+			$fields .= $key . '=' . $value . '&'; 
+		} 
+		rtrim($fields, '&'); 
+		$post = curl_init(); 
+		curl_setopt($post, CURLOPT_URL, $url); 
+		curl_setopt($post, CURLOPT_POST, count($data)); 
+		curl_setopt($post, CURLOPT_POSTFIELDS, $fields); 
+		curl_setopt($post, CURLOPT_RETURNTRANSFER, 1); 
+		$result = curl_exec($post); 
+		curl_close($post);
+		
+		return $result;
+	}
+	
+	// TODO: Temporizador de caché
+	// time() - filemtime($this->cacheFileName)) < $this->cacheTime
+	function processProfile($profile) {
+		$url_data = "https://api.about.me/api/v2/json/user/view/".$profile;
+		$dir = PFrameWork::$config->get('dir') . "cache/profiles/";
+		if (!file_exists($dir)) mkdir($dir);
+		$file = $dir . md5($url_data);
+
+		if (!file_exists($file) || (time() - filemtime($file) > PFrameWork::$config->get('cachetime'))) {
+			$data = array(
+					"extended" => "true",
+					"client_id" => PModel::$about_key				
+					);
+
+			$ret = PModel::post_to_url($url_data, $data);
+			$fp = fopen($file, 'w');
+			fwrite($fp, $ret);
+			fclose($fp);
+		}
+		return PModel::getArray($file);
+	}
+
+	function getAvatar($profile) {
+		if ($profile['avatar'] == "") return $profile["thumbnail_291x187"];
+		else return $profile["avatar"];
 	}
 
 	// What is?
