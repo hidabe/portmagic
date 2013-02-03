@@ -11,7 +11,7 @@
 
 require_once("helpers/framework.php");
 PFrameWork::init();
-ini_set("display_errors",1);
+
 $data = PModel::getArray(PFrameWork::$config->get('dir') . PFrameWork::$config->get("data"));
 
 PModel::initPlugins();
