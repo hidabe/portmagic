@@ -25,7 +25,9 @@ You need in your server:
 
 2. Rename configuration-sample.php to configuration.php and review it
 
-3. Rename data-sample.json to data.json and set your webs/app links here
+3. You need access to about.me and get your Developer KEY
+
+4. Rename data-sample.json to data.json and set your webs/app links and about.me profiles
 
 Ok, it is done! try!
 

@@ -20,6 +20,7 @@ class PConfig {
 		var $dir = '/var/www/absolutevaryourweb/'; // You need change it
 		var $data = 'data.json'; // It is ok so, you need modify data.json
 		var $script_wk = 'scripts/wkhtmltoimage-i386'; // It is ok so
+		var $cachetime = 60000; // It is ok so
 		var $site = "YourSite"; // You need change it
 		var $description = "YourDescription"; // You need change it
 

@@ -1,11 +1,14 @@
 {
-	"0": {
-		"web":"http://joomla.org"
+	"about": {
+	    "client_id": "KEY_FROM_ABOUT_ME",
+	    "profiles": [
+	        "username_from_about_me_1",
+	        "username_from_about_me_1"
+	    ]
 	},
-    "1": {
-        "web":"http://wordpress.org"
-    },
-    "2": {
-        "web":"https://play.google.com/store/apps/details?id=com.google.android.apps.maps"
-    }
+	"webs": [
+		"http://joomla.org",
+    "http://wordpress.org",
+    "https://play.google.com/store/apps/details?id=com.google.android.apps.maps"
+	]
 }

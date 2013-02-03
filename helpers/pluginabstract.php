@@ -120,9 +120,13 @@ class PluginAbstract {
 		setlocale(LC_ALL,'es_ES');
 		setlocale(LC_TIME, 'spanish');
 		$whois = $this->getWhois();
-		$created = $whois['regrinfo']['domain']['created'];
-		$date = DateTime::createFromFormat('Y-m-j', $created);
-		$date_es = date_format($date, 'd-F-Y');
+		if (isset($whois['regrinfo']['domain']['created'])) {
+			$created = $whois['regrinfo']['domain']['created'];
+			$date = DateTime::createFromFormat('Y-m-j', $created);
+			$date_es = date_format($date, 'd-F-Y');
+		} else {
+			$date_es = "Unknow";
+		}
 		return $date_es;
 	}
 
