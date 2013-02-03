@@ -125,7 +125,7 @@ class PluginAbstract {
 			$date = DateTime::createFromFormat('Y-m-j', $created);
 			$date_es = date_format($date, 'd-F-Y');
 		} else {
-			$date_es = "Unknow";
+			$date_es = "Unknown";
 		}
 		return $date_es;
 	}
