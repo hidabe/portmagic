@@ -1,7 +1,7 @@
 <!DOCTYPE html> 
 <html> 
 <head> 
-	<title>Portfolio-Magic</title> 
+	<title><?php echo PFrameWork::$config->get('site');?></title> 
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
