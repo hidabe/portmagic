@@ -11,13 +11,15 @@
 
 require_once("helpers/framework.php");
 PFrameWork::init();
-
+ini_set("display_errors",1);
 $data = PModel::getArray(PFrameWork::$config->get('dir') . PFrameWork::$config->get("data"));
 
 PModel::initPlugins();
 PModel::initWebs($data);
+PModel::initAbout($data);
 
 $webs = PModel::$webs;
+$profiles = PModel::$profiles;
 
 require_once("layout/bootstrap/list/index.php");
 ?>
