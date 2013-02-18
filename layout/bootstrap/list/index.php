@@ -37,7 +37,7 @@
 				</div>
 
 				<div class="clr"></div>
-        <p class="lead">Who do it?</p>
+        <p class="lead">Who does it?</p>
 				<div class="row-fluid">
 					<?php foreach($profiles as $profile) { 
 /*
