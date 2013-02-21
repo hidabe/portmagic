@@ -53,7 +53,7 @@ echo '</pre>';
 									<?php echo $profile['first_name'];?> <?php echo $profile['last_name'];?>
 								</div>
 								<div class="image_inside">
-									<img src="<?php echo $img_avatar;?>"/>
+									<img src="<?php echo $img_avatar;?>" width="150px"/>
 								</div>
 							</div>
 							<a href="http://about.me/<?php echo $profile['user_name'];?>" target="_blank" class="mosaic-backdrop">

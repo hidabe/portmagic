@@ -31,7 +31,8 @@
 		.details{ margin:15px 20px; color: #FFF; }	
 
 		.image_inside {
-			padding: 0px 20px;
+			text-align: center;
+			padding: 10px 10px 0 10px;
 		}
 	</style>
 
