@@ -281,7 +281,11 @@ class PModel {
 	// Get metadata from URL
 	function getMetadata($url) {
 		$name = md5($url);
-		$file = PFrameWork::$config->get('dir') . "cache/metadata/".$name.".json";
+
+		$dir = PFrameWork::$config->get('dir') . "cache/metadata/";
+		if (!file_exists($dir)) mkdir($dir);
+
+		$file = $dir.$name.".json";
 
 		if (!file_exists($file)) {
 			$data = get_meta_tags($url);
