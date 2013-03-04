@@ -19,6 +19,8 @@ You need in your server:
 
 3. wkhtmltoimage working (more info is coming)
 
+4. curl_init() function active (sudo apt-get install php5-curl)
+
 ## Installation
 
 1. Download code
