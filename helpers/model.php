@@ -140,7 +140,10 @@ class PModel {
 		$wk = PFrameWork::$config->get('dir') . PFrameWork::$config->get('script_wk');
 		$name = md5($url);
 
-		$dir = PFrameWork::$config->get('dir') . "cache/images/".$dimx."x".$dimy;
+		$imgdir = PFrameWork::$config->get('dir') . "cache/images/";
+		if (!file_exists($imgdir)) mkdir($imgdir);
+
+		$dir = $imgdir.$dimx."x".$dimy;
 		if (!file_exists($dir)) mkdir($dir);
 		$file = $dir."/".$name.".png";
 
@@ -301,7 +304,9 @@ class PModel {
 
 	function getContent($url) {
 		$name = md5($url);
-		$file = PFrameWork::$config->get('dir') . "cache/content/".$name.".html";
+		$dir = PFrameWork::$config->get('dir') . "cache/content/";
+		if (!file_exists($dir)) mkdir($dir);
+		$file = $dir.$name.".html";
 		
 		if (!file_exists($file)) {
 			$content = file_get_contents($url);
@@ -311,6 +316,35 @@ class PModel {
 			return $content;
 		} else {
 			return PModel::getFile($file);
+		}
+	}
+
+	function file_web_exists($url)
+	{
+		$dir = PFrameWork::$config->get('dir') . "cache/infofile";
+		if (!file_exists($dir)) mkdir($dir);
+		$name = md5($url);
+		$file = $dir . '/' . $name . '.info';
+		if (!file_exists($file)) {
+			$fp = curl_init($url);
+			$ret = curl_setopt($fp, CURLOPT_RETURNTRANSFER, 1); 
+			$ret = curl_setopt($fp, CURLOPT_TIMEOUT, 30); 
+			$ret = curl_exec($fp); 
+			$info = curl_getinfo($fp, CURLINFO_HTTP_CODE); 
+			curl_close($fp);
+			$fp = fopen($file, 'w');
+			fwrite($fp, $info);
+			fclose($fp);
+		} else {
+			$info = PModel::getFile($file);
+		}
+		if($info == 404)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
 		}
 	}
 

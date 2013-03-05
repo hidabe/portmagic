@@ -7,6 +7,7 @@
 
 class PluginApp_Win8 extends PluginApp {
 	public function isIt($url) {
+		return false;
 //		return (substr($url,0,30) == "https://play.google.com/store/");
 	}
 }

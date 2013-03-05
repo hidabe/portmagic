@@ -19,6 +19,7 @@ class PluginWeb extends PluginAbstract {
 	function mySkills() {
 		$skills = array();
 		if ($this->isInContent("bootstrap")) $skills[] = "Bootstrap";
+		if ($this->isInContent("jquery.mobile")) $skills[] = "jQueryMobile";
 		if ($this->getMetaKey("viewport") == "width=device-width, initial-scale=1.0" ||
 		$this->getMetaKey("viewport") == "width=device-width, initial-scale=1") $skills[] = "Mobile";
 		return $skills;

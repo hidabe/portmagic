@@ -10,9 +10,28 @@ class PluginWeb_Drupal extends PluginWeb {
 
 	public function isIt($url) {
 		$meta = PModel::getMetadata($url);
-		if (strpos(PModel::getSafeKey($meta,'generator'),'Drupal') !== false) {
+		$name = md5($url);
+		$file = PFrameWork::$config->get('dir') . "cache/images/".$name. ".sh";
+		$dir = $url . "/scripts/drupal.sh";
+		if (strpos(PModel::getSafeKey($meta,'generator'),'Drupal') != false)
+		{
 			return true;
 		}
+		else{
+			if(PModel::file_web_exists($dir))
+			{
+				PModel::saveFileURL($dir, $file);
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+		
+	}
+
+	public function getImages($url) {
+
 	}
 
 	public function getTitle() {
