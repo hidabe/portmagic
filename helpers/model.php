@@ -68,6 +68,35 @@ class PModel {
 		
 		return $result;
 	}
+
+	function proccessIMG($url) {
+// ORIGINAL:			return $url;
+
+		// TODO: Hacer configurable desde fuente
+
+		$dir = PFrameWork::$config->get('dir') . "cache/profiles/";
+		if (!file_exists($dir)) mkdir($dir);
+		$file = $dir . md5($url) . ".jpg";
+		if (!file_exists($file) || (time() - filemtime($file) > PFrameWork::$config->get('cachetime'))) {
+			PModel::saveFileURL($file, $url);
+
+			// WEB INTERESANTE: http://www.rpublica.net/imagemagick/artisticas.html#sepia-tone
+
+			$file_efx = $dir . md5($url). "_ex.jpg";
+			// pencil: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -colorspace Gray -negate -edge 1 -negate -blur 0x.5 -gravity center -extent 300x220 ".$file_efx;
+			// sepia: */ $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -sepia-tone 80% -gravity center -extent 300x220 ".$file_efx;
+			// azul + sepia: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -sepia-tone 70% -fill blue -tint 80% -gravity center -extent 300x220 ".$file_efx;
+			// azul: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -fill blue -tint 60% -gravity center -extent 300x220 ".$file_efx;
+			/* sketch: */ $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -sketch 0x20+120 -gravity center -extent 300x220 ".$file_efx;
+			// solarize: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -solarize 55 -gravity center -extent 300x220 ".$file_efx;
+			
+/*echo $command_thumb;
+exit();*/
+			exec($command_thumb, $output);
+		}
+		$ret = "cache/profiles/".md5($url). "_ex.jpg";
+		return $ret;
+	}
 	
 	// TODO: Temporizador de caché
 	// time() - filemtime($this->cacheFileName)) < $this->cacheTime
@@ -92,8 +121,9 @@ class PModel {
 	}
 
 	function getAvatar($profile) {
-		if ($profile['avatar'] == "") return $profile["thumbnail_291x187"];
-		else return $profile["avatar"];
+		if ($profile['avatar'] == "") $url = $profile["thumbnail_291x187"];
+		else $url = $profile["avatar"];
+		return PModel::proccessIMG($url);
 	}
 
 	// What is?

@@ -1,46 +1,30 @@
 <?php
 /**
-*   @package    AutoPortDabe (P)
+*   @package    PortMagic
 *   @copyright  Fernando Hidalgo
 *   @license    GNU/GPL, http://www.gnu.org/licenses/gpl-3.0.txt
 *   @changelogs changelogs.php
 *   @file       index.php
 **/
 
-ini_set("display_errors",1);
+//ini_set("display_errors",1);
 
 require_once("helpers/framework.php");
 PFrameWork::init();
 
+//ini_set("display_errors", 1);
 $data = PModel::getArray(PFrameWork::$config->get('dir') . PFrameWork::$config->get("data"));
 
 PModel::initPlugins();
 PModel::initWebs($data);
+PModel::initAbout($data);
 
 $webs = PModel::$webs;
-/*echo '<pre>';
-print_r($webs);
-echo '</pre>';
-exit();*/
-/*
-foreach($data as $d) {
-	$htmllist[] = PModel::getHtmllist($d['web']);
-	$plugin = PModel::whatpluginis($d['web']);
-}
-*/
+$profiles = PModel::$profiles;
 
-/*
-$meta = PModel::getMetadata($data[0]['web']);
-echo '<pre>';
-print_r($htmllist);
-echo '</pre>';
-exit();
-*/
-
-require_once("layout/jquerymobile/list/index.php");
-
-//echo '<pre>';
-//print_r($meta);
-//echo '</pre>';
-//PModel::doThumbnails($config);
+$page = $_GET['page'];
+if ($page == "") $page = "what";
+if ($page != "who" && $page != "what") die("Error loading page");
+// Custom pages
+require_once("layout/bootstrap/list/$page.php");
 ?>

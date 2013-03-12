@@ -22,5 +22,10 @@ PModel::initAbout($data);
 $webs = PModel::$webs;
 $profiles = PModel::$profiles;
 
-require_once("layout/bootstrap/list/index.php");
+$page = $_GET['page'];
+if ($page == "") $page = "what";
+// TODO: Better check pages
+if ($page != "who" && $page != "what") die("Error loading page");
+// TODO: Add Custom pages
+require_once("layout/bootstrap/list/$page.php");
 ?>
