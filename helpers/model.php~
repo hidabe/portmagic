@@ -68,6 +68,33 @@ class PModel {
 		
 		return $result;
 	}
+
+	function proccessIMG($url) {
+// ORIGINAL:			return $url;
+
+		$dir = PFrameWork::$config->get('dir') . "cache/profiles/";
+		if (!file_exists($dir)) mkdir($dir);
+		$file = $dir . md5($url) . ".jpg";
+		if (!file_exists($file) || (time() - filemtime($file) > PFrameWork::$config->get('cachetime'))) {
+			PModel::saveFileURL($file, $url);
+
+			// WEB INTERESANTE: http://www.rpublica.net/imagemagick/artisticas.html#sepia-tone
+
+			$file_efx = $dir . md5($url). "_ex.jpg";
+			// pencil: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -colorspace Gray -negate -edge 1 -negate -blur 0x.5 -gravity center -extent 300x220 ".$file_efx;
+			/* sepia: */ $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -sepia-tone 80% -gravity center -extent 300x220 ".$file_efx;
+			// azul + sepia: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -sepia-tone 70% -fill blue -tint 80% -gravity center -extent 300x220 ".$file_efx;
+			// azul: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -fill blue -tint 60% -gravity center -extent 300x220 ".$file_efx;
+			// sketch: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -sketch 0x20+120 -gravity center -extent 300x220 ".$file_efx;
+			// solarize: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -solarize 55 -gravity center -extent 300x220 ".$file_efx;
+			
+/*echo $command_thumb;
+exit();*/
+			exec($command_thumb, $output);
+		}
+		$ret = "cache/profiles/".md5($url). "_ex.jpg";
+		return $ret;
+	}
 	
 	// TODO: Temporizador de caché
 	// time() - filemtime($this->cacheFileName)) < $this->cacheTime
@@ -77,7 +104,7 @@ class PModel {
 		if (!file_exists($dir)) mkdir($dir);
 		$file = $dir . md5($url_data);
 
-		if (!file_exists($file) || (time() - filemtime($file) > PFrameWork::$config->get('cachetime')) {
+		if (!file_exists($file) || (time() - filemtime($file) > PFrameWork::$config->get('cachetime'))) {
 			$data = array(
 					"extended" => "true",
 					"client_id" => PModel::$about_key				
@@ -92,8 +119,9 @@ class PModel {
 	}
 
 	function getAvatar($profile) {
-		if ($profile['avatar'] == "") return $profile["thumbnail_291x187"];
-		else return $profile["avatar"];
+		if ($profile['avatar'] == "") $url = $profile["thumbnail_291x187"];
+		else $url = $profile["avatar"];
+		return PModel::proccessIMG($url);
 	}
 
 	// What is?
@@ -140,7 +168,10 @@ class PModel {
 		$wk = PFrameWork::$config->get('dir') . PFrameWork::$config->get('script_wk');
 		$name = md5($url);
 
-		$dir = PFrameWork::$config->get('dir') . "cache/images/".$dimx."x".$dimy;
+		$imgdir = PFrameWork::$config->get('dir') . "cache/images/";
+		if (!file_exists($imgdir)) mkdir($imgdir);
+
+		$dir = $imgdir.$dimx."x".$dimy;
 		if (!file_exists($dir)) mkdir($dir);
 		$file = $dir."/".$name.".png";
 
@@ -281,7 +312,11 @@ class PModel {
 	// Get metadata from URL
 	function getMetadata($url) {
 		$name = md5($url);
-		$file = PFrameWork::$config->get('dir') . "cache/metadata/".$name.".json";
+
+		$dir = PFrameWork::$config->get('dir') . "cache/metadata/";
+		if (!file_exists($dir)) mkdir($dir);
+
+		$file = $dir.$name.".json";
 
 		if (!file_exists($file)) {
 			$data = get_meta_tags($url);
@@ -297,7 +332,9 @@ class PModel {
 
 	function getContent($url) {
 		$name = md5($url);
-		$file = PFrameWork::$config->get('dir') . "cache/content/".$name.".html";
+		$dir = PFrameWork::$config->get('dir') . "cache/content/";
+		if (!file_exists($dir)) mkdir($dir);
+		$file = $dir.$name.".html";
 		
 		if (!file_exists($file)) {
 			$content = file_get_contents($url);
@@ -307,6 +344,35 @@ class PModel {
 			return $content;
 		} else {
 			return PModel::getFile($file);
+		}
+	}
+
+	function file_web_exists($url)
+	{
+		$dir = PFrameWork::$config->get('dir') . "cache/infofile";
+		if (!file_exists($dir)) mkdir($dir);
+		$name = md5($url);
+		$file = $dir . '/' . $name . '.info';
+		if (!file_exists($file)) {
+			$fp = curl_init($url);
+			$ret = curl_setopt($fp, CURLOPT_RETURNTRANSFER, 1); 
+			$ret = curl_setopt($fp, CURLOPT_TIMEOUT, 30); 
+			$ret = curl_exec($fp); 
+			$info = curl_getinfo($fp, CURLINFO_HTTP_CODE); 
+			curl_close($fp);
+			$fp = fopen($file, 'w');
+			fwrite($fp, $info);
+			fclose($fp);
+		} else {
+			$info = PModel::getFile($file);
+		}
+		if($info == 404)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
 		}
 	}
 

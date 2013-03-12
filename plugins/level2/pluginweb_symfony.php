@@ -26,9 +26,6 @@ class PluginWeb_Symfony extends PluginWeb {
 			}
 			else
 			{
-				echo $name . '<br>';
-				echo $file . '<br>';
-				echo $dir . '<br>' . 'Symfony';
 				return false;
 			}
 		}
