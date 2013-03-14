@@ -1,0 +1,9 @@
+RewriteEngine on
+
+# The two lines below allow access to existing files on your server, bypassing
+# the rewrite
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule (.*) index.php?page=$1 [QSA]
