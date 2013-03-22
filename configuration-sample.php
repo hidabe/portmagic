@@ -23,7 +23,13 @@ class PConfig {
 		var $cachetime = 60000; // It is ok so
 		var $site = "YourSite"; // You need change it
 		var $description = "YourDescription"; // You need change it
-		var $mail = "your@mail.com"; // Your mail for contact
+				
+		var $username = "your@gmail.com";
+		var $password = "YourPassword";
+		
+		var $email = "your@mail.com";
+		
+		
 
     public function get($param) {
             return $this->$param;
