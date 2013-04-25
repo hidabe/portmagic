@@ -4,9 +4,9 @@
 
       <!-- Begin page content -->
 	<div class="container">
-		<p class="lead">Contact us</p>
+		<p class="lead"><?php echo LANG_Contact_us;?></p>
 		
-		<form action="sendEmail.php" method="POST" class="form-horizontal" onSubmit="return validaEmail(this.email.value);">
+		<form action="index.php?action=sendEmail" method="POST" class="form-horizontal" onSubmit="return validaEmail(this.email.value);">
   			<div class="control-group">
     				<label class="control-label" for="name">Name</label>
     				<div class="controls">

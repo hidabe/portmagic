@@ -87,8 +87,12 @@ class PModel {
 			// sepia: */ $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -sepia-tone 80% -gravity center -extent 300x220 ".$file_efx;
 			// azul + sepia: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -sepia-tone 70% -fill blue -tint 80% -gravity center -extent 300x220 ".$file_efx;
 			// azul: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -fill blue -tint 60% -gravity center -extent 300x220 ".$file_efx;
-			/* sketch: */ $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -sketch 0x20+120 -gravity center -extent 300x220 ".$file_efx;
+			/* sketch:  $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -sketch 0x20+120 -gravity center -extent 300x220 ".$file_efx;*/
 			// solarize: $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -solarize 55 -gravity center -extent 300x220 ".$file_efx;
+			// colorize sopinet
+			// $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -colorize 99,0,0 -gravity center -extent 300x220 ".$file_efx;
+
+			/* Blanco y negro */ $command_thumb = "convert -define jpeg:size=300x300 ".$file." -thumbnail 300x220^ -gravity center -extent 300x220 ".$file_efx;	
 			
 /*echo $command_thumb;
 exit();*/
@@ -437,6 +441,27 @@ exit();*/
 		curl_exec($ch);
 		curl_close($ch);
 		fclose($fp);
+	}
+
+	function getFilesPHP($dir) {
+		if ($handle = opendir($dir)) {
+		  while (false !== ($entry = readdir($handle))) {
+		      if ($entry != "." && $entry != "..") {
+						$temp = pathinfo($dir . '/' . $entry);
+						if ($temp['extension'] == 'php') {
+							$files[] = $entry;
+						}
+		      }
+		  }
+		  closedir($handle);
+		}
+		return $files;
+	}
+
+	function getPages($layout, $ext) {
+		$dir = PFrameWork::$config->get('dir') . "layout/" . $layout . '/' . $ext;
+		$pages = PModel::getFilesPHP($dir);
+		return $pages;
 	}
 }
 ?>

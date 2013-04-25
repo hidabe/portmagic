@@ -1,5 +1,5 @@
 <?php
-	include("class.phpmailer.php");
+	include(PFrameWork::$config->get('dir')."externals/mail/class.phpmailer.php");
 	//include("class.smtp.php");
 
 	$name = $_POST['name'];
@@ -15,8 +15,8 @@
 
 	$mail->Host = "smtp.gmail.com";
 	$mail->Port = 465;
-	$mail->Username = "lumilo8@gmail.com";
-	$mail->Password = "luismi91";
+	$mail->Username = PFrameWork::$config->get('username');
+	$mail->Password = PFrameWork::$config->get('password');
 
 	$mail->From = $email;
 	$mail->FromName = $name;
@@ -28,14 +28,12 @@
 	// Podemos agregar mas de uno si queremos.
 	//$mail->AddAttachment("ruta-del-archivo/archivo.zip");
 
-	$mail->AddAddress("lumilo8@gmail.com");
+	$mail->AddAddress(PFrameWork::$config->get('email'));
 	$mail->IsHTML(true);
 
 	if(!$mail->Send()) {
-	  ?><script>alert('Algo ha fallado');</script><?
+	  ?><script>alert('¡Algo ha fallado!');</script><?
 	} else {
-	  header("Location: http://localhost/portmagic/portmagic/");
+	  ?><script>alert('¡Envío con éxito!');</script><?
 	}
-	
-	
 ?>

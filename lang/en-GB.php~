@@ -3,6 +3,5 @@ define("LANG_What", "What");
 define("LANG_Who", "Who");
 define("LANG_Who_does_it", "Who does it?");
 define("LANG_What_are_we_doing", "What are we doing?");
-define("LANG_Contact_us", "Contact us");
 define("LANG_Contact", "Contact");
 ?>

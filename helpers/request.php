@@ -46,5 +46,21 @@ class PRequest {
 		$string = str_replace("&uacute;","i",$string);
 		return $string;
 	}
+
+	function getRoute($page, $action = "") {
+		if (file_exists(PFrameWork::$config->get('dir') . '/.htaccess')) {
+			if ($action == "") {
+				return $page;
+			} else {
+				return $page."/".$action;
+			}
+		} else {
+			if ($action == "") {
+				return "index.php?page=".$page;
+			} else {
+				return "index.php?page=".$page."&action=".$action;
+			}
+		}
+	}
 }
 ?>

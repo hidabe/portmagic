@@ -22,12 +22,12 @@ class PConfig {
 		var $script_wk = 'scripts/wkhtmltoimage-i386'; // It is ok so
 		var $cachetime = 60000; // It is ok so
 		var $site = "YourSite"; // You need change it
+		var $header = "TextInHeaderOrImage"; // You need change it
 		var $description = "YourDescription"; // You need change it
-				
-		var $username = "your@gmail.com";
-		var $password = "YourPassword";
-		
-		var $email = "your@mail.com";
+		var $username = "YourEmail@gDomain"; // You need change it
+		var $password = "YourPassword"; // You need change it
+		var $email = "DestinationEmail@Domain.com"; // You need change it
+		var $template = "ROUTE_TO_CSS_FILE"; // You can change it
 		
 		
 

@@ -4,11 +4,16 @@
 	<title><?php echo PFrameWork::$config->get('site');?></title> 
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<head profile="http://www.w3.org/2005/10/profile">
+	<link rel="icon" 
+		    type="image/png" 
+		    href="favicon.png">
 	<script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
   <link href="layout/bootstrap/library/css/bootstrap.css" rel="stylesheet">
 	<link href="layout/bootstrap/library/css_add/sticky.css" rel="stylesheet">
   <link href="layout/bootstrap/library/css/bootstrap-responsive.css" rel="stylesheet">
 	<script src="layout/bootstrap/library/js/bootstrap.min.js"></script>
+  <link href="<?php echo PFrameWork::$config->get('template');?>" rel="stylesheet">
 
 	<link href="layout/bootstrap/mosaic/css/mosaic.css" rel="stylesheet">
 	<script src="layout/bootstrap/mosaic/js/mosaic.1.0.1.min.js"></script>
@@ -51,10 +56,10 @@
 
 		.detupper { text-transform:uppercase; }
 
-		.details{ margin:15px 20px; color: #003c52; }
-			h4{ font:300 16px 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height:160%; letter-spacing:0.15em; color:#fff;}
-			p{ font:300 12px 'Lucida Grande', Tahoma, Verdana, sans-serif; color:#666; }
-			a{ text-decoration:none; }
+		.details{ margin:15px 20px; }
+			.details h4{ font:300 16px 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height:160%; letter-spacing:0.15em; color:#fff;}
+			.details p{ font:300 12px 'Lucida Grande', Tahoma, Verdana, sans-serif; }
+			.details a{ text-decoration:none; }
 
 		.image_inside {
 			text-align: center;

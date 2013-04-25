@@ -22,10 +22,26 @@ PModel::initAbout($data);
 $webs = PModel::$webs;
 $profiles = PModel::$profiles;
 
+$pages_main = PModel::getPages('bootstrap', 'list');
+$pages_custom = PModel::getPages('bootstrap', 'custom');
+/*echo '<pre>';
+print_r($pages_custom);
+echo '</pre>';
+exit();*/
+
+// Lang
+require_once("lang/es-ES.php");
+
+if ($_GET['action'] == 'sendEmail') {
+	include("externals/mail/sendEmail.php");
+}
+
 $page = $_GET['page'];
 if ($page == "") $page = "what";
-// TODO: Better check pages
-if ($page != "who" && $page != "what") die("Error loading page");
-// TODO: Add Custom pages
-require_once("layout/bootstrap/list/$page.php");
+if (!in_array($page.".php", $pages_main) && !in_array($page.".php", $pages_custom)) die("Error loading page");
+if (in_array($page.".php", $pages_main)) {
+	require_once("layout/bootstrap/list/$page.php");
+} else {
+	require_once("layout/bootstrap/custom/$page.php");
+}
 ?>

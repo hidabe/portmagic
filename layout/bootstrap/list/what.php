@@ -4,7 +4,7 @@
 
       <!-- Begin page content -->
       <div class="container">
-        <p class="lead">What are we doing?</p>
+        <p class="lead"><?php echo LANG_What_are_we_doing;?></p>
 
 				<div id="myCarousel" class="carousel slide">
 					<!-- Carousel items -->
