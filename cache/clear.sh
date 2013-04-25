@@ -1,3 +1,4 @@
+# clear script
 rm images/* -R
 rm content/* -R
 rm htmllist/* -R
